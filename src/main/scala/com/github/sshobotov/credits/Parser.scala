@@ -5,6 +5,9 @@ import com.github.tototoshi.csv._
 import scala.io.Source
 import scala.util.Try
 
+/**
+ * Reads the source and tries to parse records of expected type
+ */
 trait Parser[T] {
   def parse(source: Source, columns: List[String]): Parser.Results[T]
 }
@@ -12,8 +15,8 @@ trait Parser[T] {
 object Parser {
   type Results[T] = Either[Throwable, Iterator[T]]
 
-  class NaivePrnParser extends Parser[Map[String, String]] {
-    override def parse(source: Source, columns: List[String]): Results[Map[String, String]] =
+  class NaivePrnParser extends Parser[List[(String, String)]] {
+    override def parse(source: Source, columns: List[String]): Results[List[(String, String)]] =
       Try {
         val lines            = source.getLines()
         val headerLine       = lines.next()
@@ -32,16 +35,16 @@ object Parser {
           }
 
         lines.map { line =>
-          columns.foldLeft(Map.empty[String, String]) { case (acc, column) =>
+          columns.foldRight(List.empty[(String, String)]) { case (column, acc) =>
             val (from, to) = columnBoundaries(column)
-            acc.updated(column, line.substring(from, to).trim)
+            (column, if (line.length <= from) "" else line.substring(from, to).trim) :: acc
           }
         }
       }.toEither
   }
 
-  class CsvParser(format: CSVFormat = defaultCSVFormat) extends Parser[Map[String, String]] {
-    override def parse(source: Source, columns: List[String]): Results[Map[String, String]] =
+  class CsvParser(format: CSVFormat = defaultCSVFormat) extends Parser[List[(String, String)]] {
+    override def parse(source: Source, columns: List[String]): Results[List[(String, String)]] =
       Try {
         CSVReader
           .open(source)(format)
@@ -55,8 +58,8 @@ object Parser {
             if (absentColumns.isEmpty) {
               val onlySelectedColumns =
                 it.map { mapped =>
-                  columns.foldLeft(Map.empty[String, String]) { (acc, column) =>
-                    acc.updated(column, mapped(column).trim)
+                  columns.foldRight(List.empty[(String, String)]) { (column, acc) =>
+                    (column, mapped(column).trim) :: acc
                   }
                 }
               Right(onlySelectedColumns)
@@ -64,7 +67,7 @@ object Parser {
               Left(new IllegalStateException(s"Expected columns are absent: ${absentColumns.mkString(", ")}"))
             }
 
-          case _ => Right(it)
+          case _ => Right(Iterator.empty[List[(String, String)]])
         }
       }
   }
