@@ -41,11 +41,14 @@ object Template {
         s"""<!DOCTYPE html>
            |<html>
            |  <body>
-           |    <table>""".stripMargin
+           |    <table>
+           |""".stripMargin
       , r =>
-        s"""      <tr>${r.map(_._1).map(th).mkString}</tr>""".stripMargin
+        s"""      <tr>${r.map(_._1).map(th).mkString}</tr>
+           |""".stripMargin
       , r =>
-        s"""      <tr>${r.map(_._2).map(td).mkString}</tr>""".stripMargin
+        s"""      <tr>${r.map(_._2).map(td).mkString}</tr>
+           |""".stripMargin
       , s"""    </table>
            |  </body>
            |</html>""".stripMargin

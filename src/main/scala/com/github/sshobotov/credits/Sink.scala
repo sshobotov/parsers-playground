@@ -1,6 +1,6 @@
 package com.github.sshobotov.credits
 
-import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
+import java.io.{BufferedWriter, File, FileWriter}
 
 import scala.util.Try
 
@@ -13,14 +13,14 @@ trait Sink[T] {
 
 object Sink {
   def stringsFile(target: File): Either[Throwable, Sink[String]] =
-    Try(new PrintWriter(new BufferedWriter(new FileWriter(target))))
+    Try(new BufferedWriter(new FileWriter(target)))
       .toEither
       .map { w =>
         new Sink[String] {
           override def consume(records: Iterator[String]): Either[Throwable, Unit] = {
             Try {
               try {
-                records.foreach(w.println)
+                records.foreach(w.write)
               } finally {
                 w.close()
               }
