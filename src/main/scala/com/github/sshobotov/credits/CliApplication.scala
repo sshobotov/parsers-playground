@@ -25,7 +25,7 @@ object CliApplication {
             converter.pipe(Source.fromFile(sourceFile)(charset), _)
           } match {
             case Left(err) => throw err
-            case _         => println(s"Copied to ${targetFile.getAbsolutePath}")
+            case _         => println(s"Converted to ${targetFile.getAbsolutePath}")
           }
         }
 
